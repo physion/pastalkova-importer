@@ -5,7 +5,7 @@ function [project, group] = importParameters(dsc, parameters)
     
     project = importProject(ctx, parameters);
     
-    source = importSource(ctx, parameters);
+    source = importSource(ctx, parameters); % 'brain' source
     
     exp = importExperiment(project, parameters);
     
@@ -15,7 +15,18 @@ end
 
 function group = importGroup(source, exp, parameters)
    
-    group = exp.insertEpochGroup(source, 'test', exp.getStartTime());
+    group = exp.insertEpochGroup(source,...
+        parameters.epochGroup.description,...
+        exp.getStartTime());
+    
+    group.addProperty('restrictionLengthHrs',...
+        parameters.epochGroup.restrictionLengthHrs);
+    group.addProperty('animalWeight',... %TODO units?
+        parameters.epochGroup.animWeight);
+    group.addProperty('blockID',...
+        parameters.epochGroup.blockID);
+    
+    group.addNote(parameters.epochGroup.notes, 'experiment-notes');
 end
 
 function exp = importExperiment(project, parameters)
@@ -65,7 +76,7 @@ function project = importProject(ctx, parameters)
     end
 end
 
-function src = importSource(ctx, parameters)
+function brain = importSource(ctx, parameters)
     import ovation.*;
     [src,isNew] = sourceForInsertion(ctx,...
         {parameters.source.ID},...
@@ -81,5 +92,17 @@ function src = importSource(ctx, parameters)
             parameters.source.sex);
         src.addProperty('lightCycle',...
             parameters.source.lightCyc);
-    end 
+        
+        brain = src.insertSource('brain');
+    else
+        brains = src.getChildren('brain');
+        assert(length(brains) == 1);
+        brain = brains(1);
+    end
+    
+    
+    for i = 1:length(parameters.epochGroup.brainAreaLayer)
+        label = parameters.epochGroup.brainAreaLayer{i};
+        brain.insertSource(label);
+    end
 end
