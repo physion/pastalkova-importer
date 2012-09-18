@@ -24,9 +24,16 @@ Add the +xunit pacakge to the Matlab path
 Add the src folder to the Matlab path
 
 	>> addpath src
+	
 
 Running tests
 -------------
+
+Set the necessary environment variables:
+
+	OVATION_CONNECTION_FILE = path to test database connection file
+	OVATION_TEST_FDID = test database ID
+	OVATION_LOCK_SERVER = lock server host (i.e. $(hostname))
 
 Run the Matlab tests:
 
