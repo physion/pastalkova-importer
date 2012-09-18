@@ -4,6 +4,7 @@ classdef TestShouldImportOvationStructure < TestMatlabSuite
    
     properties
         paramsPath;
+        behavPath;
     end
     
     methods
@@ -12,22 +13,26 @@ classdef TestShouldImportOvationStructure < TestMatlabSuite
              self = self@TestMatlabSuite(name);
              
              self.paramsPath = 'fixtures/A543-20120422-01-param.mat';
+             self.behavPath = 'fixtures/A543-20120422-01_BehavElectrData.mat';
         end 
         
         
         function testShouldImportOvationProject(self)
             
             params = load(self.paramsPath);
+            xml.FileName = 'foo';
             
-            [proj,~] = importParameters(self.dsc, params);
+            [proj,~] = importParameters(self.dsc, params, xml);
             
             assertEqual(char(proj.getName()), params.project.name);
         end
         
         function testShouldImportOvationExperiment(self)
             params = load(self.paramsPath);
+            behav = load(self.behavPath);
+            xml = behav.xml;
             
-            [~,grp] = importParameters(self.dsc, params);
+            [~,grp] = importParameters(self.dsc, params, xml);
             
             assertJavaEqual(parseDateTime(params.experiment.startDate, params.experiment.timezone),...
                 grp.getExperiment().getStartTime());
@@ -41,13 +46,16 @@ classdef TestShouldImportOvationStructure < TestMatlabSuite
                 params.experiment.nProbes);
             assertEqual(exp.getOwnerProperty('nHeadstages'),...
                 params.experiment.nHeadstages);
+            
+            assertEqual(exp.getOwnerProperty('originalFile'),...
+                xml.FileName);
         end
         
         function testShouldImportOvaitonEpochGroup(self)
             params = load(self.paramsPath);
+            xml.FileName = 'foo';
             
-            
-            [proj,grp] = importParameters(self.dsc, params);
+            [proj,grp] = importParameters(self.dsc, params, xml);
             
             projs = grp.getExperiment().getProjects();
             assertJavaEqual(projs(1), proj);
@@ -71,8 +79,8 @@ classdef TestShouldImportOvationStructure < TestMatlabSuite
         function testShouldImportRootOvationSource(self)
             
             params = load(self.paramsPath);
-            
-            importParameters(self.dsc, params);
+            xml.FileName = 'foo';
+            importParameters(self.dsc, params, xml);
             
             ctx = self.dsc.getContext();
             
@@ -104,8 +112,9 @@ classdef TestShouldImportOvationStructure < TestMatlabSuite
         
         function testShouldImportSourceHierarchy(self)
             params = load(self.paramsPath);
+            xml.FileName = 'foo';
             
-            importParameters(self.dsc, params);
+            importParameters(self.dsc, params, xml);
             
             ctx = self.dsc.getContext();
             

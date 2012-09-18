@@ -1,4 +1,4 @@
-function [project, group] = importParameters(dsc, parameters)
+function [project, group] = importParameters(dsc, parameters, xml)
     import ovation.*;
     
     ctx = dsc.getContext();
@@ -7,7 +7,7 @@ function [project, group] = importParameters(dsc, parameters)
     
     source = importSource(ctx, parameters); % 'brain' source
     
-    exp = importExperiment(project, parameters);
+    exp = importExperiment(project, parameters, xml);
     
     group = importGroup(source, exp, parameters);
     
@@ -29,7 +29,7 @@ function group = importGroup(source, exp, parameters)
     group.addNote(parameters.epochGroup.notes, 'experiment-notes');
 end
 
-function exp = importExperiment(project, parameters)
+function exp = importExperiment(project, parameters, xml)
     
     purpose = parameters.experiment.purpose;
     startDate = parseDateTime(parameters.experiment.startDate,...
@@ -46,6 +46,63 @@ function exp = importExperiment(project, parameters)
     exp.addProperty('nChTotal', parameters.experiment.nChTotal);
     exp.addProperty('nProbes', parameters.experiment.nProbes);
     exp.addProperty('nHeadstages', parameters.experiment.nHeadstages);
+    exp.addProperty('originalFile', xml.FileName);
+    
+    importDevices(exp, parameters, xml);
+end
+
+function importDevices(exp, params, xml)
+    
+    probes = importDeviceCollection(exp, params.device.probe, 'probe');
+    headstages = importDeviceCollection(exp, params.device.headstage, 'headstage');
+    
+    assert(length(probes) == length(headstages));
+    
+    for i = 1:length(probes)
+        probes(i).addProperty('headstage', headstages(i));
+    end
+    
+    dev = importDevice(exp, params.device.RecSyst, 'Recording System');
+    
+    for i = 1:length(headstages)
+        headstages(i).addProperty('recording-system', dev);
+    end
+end
+
+function devices = importDeviceCollection(exp, deviceParams, prefix)
+    for i = 1:length(deviceParams)
+        devParam = deviceParams(i);
+        devices(i) = importDevice(exp, devParam, [prefix num2str(i)]); %#ok<AGROW>
+    end
+end
+
+function dev = importDevice(exp, devParam, name)
+    if iscell(devParam.manufacturer)
+        manufacturer = devParam.manufacturer{1};
+    else
+        manufacturer = devParam.manufacturer;
+    end
+    
+    dev = exp.externalDevice(name, manufacturer);
+    fnames = fieldnames(devParam);
+    for j = 1:length(fnames)
+        fname = fnames{j};
+        
+        if(iscell(devParam.(fname)))
+            assert(length(devParam.(fname)) == 1);
+            value = devParam.(fname){1};
+        else
+            value = devParam.(fname);
+        end
+        
+        try
+            dev.addProperty(fname, value);
+        catch ME
+            warning('pastalkova:ovation:import',...
+                ['Unable to import device property ' fname]);
+        end
+        
+    end
 end
 
 function project = importProject(ctx, parameters)
