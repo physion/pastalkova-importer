@@ -9,10 +9,21 @@ Testing
 Setup
 -----
 
-- Add the ovation-test-manager-1.4.jar to the Java classpath
-- Add the +ovation/+test package to the Matlab path
-- Add the +xunit pacakge to the Matlab path
-- Add the src folder to the Matlab path
+Add the ovation-test-manager-1.4.jar to the Java classpath:
+
+	>> javaaddpath lib/ovation-test-manager-1.4.jar
+
+Add the +ovation/+test package to the Matlab path:
+
+	>> addpath path/to/+ovation
+
+Add the +xunit pacakge to the Matlab path
+
+	>> addpath lib/matlab-xunit-doctest/xunit
+
+Add the src folder to the Matlab path
+
+	>> addpath src
 
 Running tests
 -------------
