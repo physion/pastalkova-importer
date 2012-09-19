@@ -76,14 +76,20 @@ function devices = importDeviceCollection(exp, deviceParams, prefix)
     end
 end
 
-function dev = importDevice(exp, devParam, name)
+function dev = importDevice(exp, devParam, name, prefix)
     if iscell(devParam.manufacturer)
         manufacturer = devParam.manufacturer{1};
     else
         manufacturer = devParam.manufacturer;
     end
     
-    dev = exp.externalDevice(name, manufacturer);
+    if(nargin > 3 && ~isempty(prefix))
+        devName = [prefix name];
+    else
+        devName = name;
+    end
+    
+    dev = exp.externalDevice(devName, manufacturer);
     fnames = fieldnames(devParam);
     for j = 1:length(fnames)
         fname = fnames{j};
@@ -97,7 +103,7 @@ function dev = importDevice(exp, devParam, name)
         
         try
             dev.addProperty(fname, value);
-        catch ME
+        catch ME %#ok<NASGU>
             warning('pastalkova:ovation:import',...
                 ['Unable to import device property ' fname]);
         end
