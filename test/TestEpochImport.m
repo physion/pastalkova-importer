@@ -158,6 +158,8 @@ classdef TestEpochImport < TestMatlabSuite
         end
         
         function testShouldTagCorrectChoiceTrials(self)
+            import ovation.*;
+            
             data = load(self.behavPath);
             params = load(self.paramsPath);
             
@@ -169,8 +171,8 @@ classdef TestEpochImport < TestMatlabSuite
                 length(epochs));
             
             for i = 1:length(epochs)
-                taggedCorrect = epochs(i).getTagSet().contains('correct');
-                assertEqual(taggedCorrect, data.Laps.corrChoice(i));
+                taggedCorrect = epochs(i).getTagSet().contains(KeywordTag.keywordTagWithTag('correct'));
+                assert(taggedCorrect == data.Laps.corrChoice(i), [num2str(i) ': ' num2str(taggedCorrect) ' ' num2str(data.Laps.corrChoice(i))]);
             end
         end
         
@@ -186,8 +188,7 @@ classdef TestEpochImport < TestMatlabSuite
                 length(epochs));
             
             for i = 1:length(epochs)
-                assertEqual(data.Laps.whlDirChoice(i),...
-                    epochs(i).getProtocolParameter('wheelDirectionChoice'));
+                assert(data.Laps.whlDirChoice(i) == epochs(i).getProtocolParameter('wheelDirectionChoice'));
             end
         end
     end
