@@ -321,6 +321,11 @@ function epoch = importDerivedResponses(epoch, params, data, epochDescriptor)
     derivationParameters = struct();
     for i = 1:length(data.xml.SpkGrps)
         derivationParameters.(['spike_group_' num2str(i)]) = data.xml.SpkGrps(i);
+        if(isfield(derivationParameters.(['spike_group_' num2str(i)]), 'clu'))
+            error('pastalkova:ovation:import',...
+                'Spike derivation parameters alread has a .clu field');
+        end
+        derivationParameters.(['spike_group_' num2str(i)]).clu = data.Clu;
     end
     
     epoch.insertDerivedResponse('spike-index-lfp',...
