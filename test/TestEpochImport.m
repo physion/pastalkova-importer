@@ -47,7 +47,7 @@ classdef TestEpochImport < TestMatlabSuite
                     char(epoch.getProtocolID()));
         end
         
-        function testShouldImportProtocolParametersFromProtocol(self)
+        function [epoch,data,params] = importSingleEpoch(self)
             data = load(self.behavPath);
             params = load(self.paramsPath);
             d = splitEpochs(data.Laps);
@@ -55,6 +55,11 @@ classdef TestEpochImport < TestMatlabSuite
             [~,grp] = importParameters(self.dsc, params, data.xml);
             
             epoch = importEpoch(grp, params, data, d(2));
+        end
+        
+        function testShouldImportProtocolParametersFromProtocol(self)
+            
+            [epoch, ~, params] = self.importSingleEpoch();
             
             protocolParams = ovation.map2struct(...
                 ovation.struct2map(params.epochGroup.protocol));
@@ -68,6 +73,26 @@ classdef TestEpochImport < TestMatlabSuite
                 assertEqual(protocolParams.(fname),...
                     actual.(fname));
             end
+        end
+        
+        function testShouldAddLFPResponse(self)
+            [epoch, data, ~] = self.importSingleEpoch();
+            
+            r = epoch.getResponse('Recording System');
+            
+            assert(~isempty(r));
+            
+            assertElementsAlmostEqual(r.getFloatingPointData(),...
+                data.Track.eeg);
+            
+            assertEqual(char(r.getUnits()),...
+                'mV');
+            
+            rates = r.getSamplingRates();
+            assertEqual(data.xml.lfpSampleRate,...
+                rates(1));
+            
+            assertEqual('Hz', char(r.getSamplingUnits()));
         end
     end
 end
