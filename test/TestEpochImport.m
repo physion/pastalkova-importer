@@ -47,19 +47,21 @@ classdef TestEpochImport < TestMatlabSuite
                     char(epoch.getProtocolID()));
         end
         
-        function [epoch,data,params] = importSingleEpoch(self)
+        function [epoch,data,params,desc] = importSingleEpoch(self)
             data = load(self.behavPath);
             params = load(self.paramsPath);
             d = splitEpochs(data.Laps);
             
             [~,grp] = importParameters(self.dsc, params, data.xml);
             
-            epoch = importEpoch(grp, params, data, d(2));
+            ind = 2;
+            epoch = importEpoch(grp, params, data, d(ind));
+            desc = d(ind);
         end
         
         function testShouldImportProtocolParametersFromProtocol(self)
             
-            [epoch, ~, params] = self.importSingleEpoch();
+            [epoch, ~, params, ~] = self.importSingleEpoch();
             
             protocolParams = ovation.map2struct(...
                 ovation.struct2map(params.epochGroup.protocol));
@@ -76,14 +78,14 @@ classdef TestEpochImport < TestMatlabSuite
         end
         
         function testShouldAddLFPResponse(self)
-            [epoch, data, ~] = self.importSingleEpoch();
+            [epoch, data, ~, desc] = self.importSingleEpoch();
             
             r = epoch.getResponse('Recording System');
             
             assert(~isempty(r));
             
             assertElementsAlmostEqual(r.getFloatingPointData(),...
-                data.Track.eeg);
+                data.Track.eeg(desc.lfpStartIndex:desc.lfpEndIndex));
             
             assertEqual(char(r.getUnits()),...
                 'mV');
@@ -96,14 +98,14 @@ classdef TestEpochImport < TestMatlabSuite
         end
         
         function testShouldAddTrackXResponse(self)
-            [epoch, data, ~] = self.importSingleEpoch();
+            [epoch, data, ~, desc] = self.importSingleEpoch();
             
             r = epoch.getResponse('Tracking xPix');
             
             assert(~isempty(r));
             
             assertElementsAlmostEqual(r.getFloatingPointData(),...
-                data.Track.xPix);
+                data.Track.xPix(desc.lfpStartIndex:desc.lfpEndIndex));
             
             assertEqual(char(r.getUnits()),...
                 'pixel');
@@ -116,14 +118,14 @@ classdef TestEpochImport < TestMatlabSuite
         end
         
         function testShouldAddTrackYResponse(self)
-            [epoch, data, ~] = self.importSingleEpoch();
+            [epoch, data, ~, desc] = self.importSingleEpoch();
             
             r = epoch.getResponse('Tracking yPix');
             
             assert(~isempty(r));
             
             assertElementsAlmostEqual(r.getFloatingPointData(),...
-                data.Track.yPix);
+                data.Track.yPix(desc.lfpStartIndex:desc.lfpEndIndex));
             
             assertEqual(char(r.getUnits()),...
                 'pixel');
@@ -133,6 +135,60 @@ classdef TestEpochImport < TestMatlabSuite
                 rates(1));
             
             assertEqual('Hz', char(r.getSamplingUnits()));
+        end
+        
+        function testShouldAddDirectionChoiceResponse(self)
+            [epoch, data, ~, desc] = self.importSingleEpoch();
+            
+            r = epoch.getResponse('Direction Choice');
+            
+            assert(~isempty(r));
+            
+            assertElementsAlmostEqual(r.getFloatingPointData(),...
+                data.Laps.dirChoice(desc.trialNumber));
+            
+            assertEqual(char(r.getUnits()),...
+                'n/a');
+            
+            rates = r.getSamplingRates();
+            assertEqual(1,...
+                rates(1));
+            
+            assertEqual('1/trial', char(r.getSamplingUnits()));
+        end
+        
+        function testShouldTagCorrectChoiceTrials(self)
+            data = load(self.behavPath);
+            params = load(self.paramsPath);
+            
+            [~,grp] = importParameters(self.dsc, params, data.xml);
+            
+            epochs = importEpochs(grp, params, data);
+            
+            assertEqual(length(unique(data.Laps.lapID)),...
+                length(epochs));
+            
+            for i = 1:length(epochs)
+                taggedCorrect = epochs(i).getTagSet().contains('correct');
+                assertEqual(taggedCorrect, data.Laps.corrChoice(i));
+            end
+        end
+        
+        function testShouldSetWhilDirChoiceAsProtocolParameter(self)
+            data = load(self.behavPath);
+            params = load(self.paramsPath);
+            
+            [~,grp] = importParameters(self.dsc, params, data.xml);
+            
+            epochs = importEpochs(grp, params, data);
+            
+            assertEqual(length(unique(data.Laps.lapID)),...
+                length(epochs));
+            
+            for i = 1:length(epochs)
+                assertEqual(data.Laps.whlDirChoice(i),...
+                    epochs(i).getProtocolParameter('wheelDirectionChoice'));
+            end
         end
     end
 end

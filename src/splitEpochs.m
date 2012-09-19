@@ -6,5 +6,7 @@ function epochs = splitEpochs(laps)
         
         epochs(i).lfpStartIndex = laps.startLfpInd(i);
         epochs(i).lfpEndIndex = laps.endLfpInd(i);
+        
+        epochs(i).trialNumber = i;
     end
 end

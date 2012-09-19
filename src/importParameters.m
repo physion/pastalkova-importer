@@ -78,6 +78,10 @@ function importDevices(exp, params, xml)
     
     trackXPix.addProperty('camera', camera);
     trackYPix.addProperty('camera', camera);
+    
+    arduino = importDevice(exp, params.device.maze, 'Arduino');
+    dirChoice = exp.externalDevice('Direction Choice', 'JFRC');
+    dirChoice.addProperty('arduino', arduino);
 end
 
 function devices = importDeviceCollection(exp, deviceParams, prefix)
