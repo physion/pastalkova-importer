@@ -1,6 +1,6 @@
 % Copyright (c) 2012 Physion Consulting LLC
 
-classdef TestShouldImportOvationStructure < TestMatlabSuite
+classdef TestOvationStructureImport < TestMatlabSuite
    
     properties
         paramsPath;
@@ -25,6 +25,20 @@ classdef TestShouldImportOvationStructure < TestMatlabSuite
             [proj,~] = importParameters(self.dsc, params, xml);
             
             assertEqual(char(proj.getName()), params.project.name);
+        end
+        
+        function testShouldImportChannelDevices(self)
+            params = load(self.paramsPath);
+            behav = load(self.behavPath);
+            xml = behav.xml;
+            
+            [~,grp] = importParameters(self.dsc, params, xml);
+            
+            for i = 1:xml.nChannels
+                dev = grp.getExperiment().getExternalDevice(['channel' num2str(i)], 'Neuronexus');
+                assert(~isempty(dev));
+                assert(~isempty(dev.getOwnerProperty('shank').getOwnerProperty('probe')));
+            end
         end
         
         function testShouldImportOvationExperiment(self)

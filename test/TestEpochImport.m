@@ -85,17 +85,30 @@ classdef TestEpochImport < TestMatlabSuite
             
             assert(~isempty(r));
             
+            startIndex = floor(desc.lfpStartIndex * data.xml.SampleRate / data.xml.lfpSampleRate);
+            endIndex = floor(desc.lfpEndIndex * data.xml.SampleRate / data.xml.lfpSampleRate);
             assertElementsAlmostEqual(r.getFloatingPointData(),...
-                data.Track.eeg(desc.lfpStartIndex:desc.lfpEndIndex));
+                data.Track.eegRaw(startIndex:endIndex));
             
             assertEqual(char(r.getUnits()),...
-                'mV');
+                'unknown');
             
             rates = r.getSamplingRates();
-            assertEqual(data.xml.lfpSampleRate,...
+            assertEqual(data.xml.SampleRate,...
                 rates(1));
             
             assertEqual('Hz', char(r.getSamplingUnits()));
+        end
+        
+        function testShouldAddDownsampledLFPDerivedResponse(self)
+            [epoch, data, ~, desc] = self.importSingleEpoch();
+            
+            r = epoch.getMyDerivedResponse('eeg');
+            
+            assert(~isempty(r));
+            
+            assertElementsAlmostEqual(r.getFloatingPointData(),...
+                data.Track.eeg(desc.lfpStartIndex:desc.lfpEndIndex));
         end
         
         function testShouldAddTrackXResponse(self)
@@ -225,7 +238,7 @@ classdef TestEpochImport < TestMatlabSuite
                 
                 found = false;
                 for j = 1:length(drNames)
-                    if(drNames(j).equals([expectedName '_' date()])) %TODO: add date?
+                    if(drNames(j).equals([expectedName])) %TODO: add date?
                         found = true;
                         break;
                     end

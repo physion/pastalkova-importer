@@ -52,8 +52,31 @@ function exp = importExperiment(project, parameters, xml)
 end
 
 function importDevices(exp, params, xml)
+    import ovation.*;
     
     probes = importDeviceCollection(exp, params.device.probe, 'probe');
+    nShankTotal = 1;
+    for i = 1:length(probes)
+        nShanks = params.device.probe(i).nShank;
+        startShankIndex = nShankTotal;
+        endShankIndex = nShankTotal + nShanks - 1;
+        nShankTotal = nShankTotal + nShanks;
+        
+        shanks = xml.AnatGrps(startShankIndex:endShankIndex);
+        for j = 1:length(shanks)
+            shankDevice = exp.externalDevice(['shank' num2str(startShankIndex + j - 1)], params.device.probe(i).manufacturer);
+            shankDevice.addProperty('channels', NumericData(int16(shanks(j).Channels)));
+            shankDevice.addProperty('skip', NumericData(int8(shanks(j).Skip)));
+            shankDevice.addProperty('probe', probes(i));
+            
+            channels = shanks(j).Channels;
+            for k = 1:length(channels)
+                channelDevice = exp.externalDevice(['channel' num2str(channels(k))], params.device.probe(i).manufacturer);
+                channelDevice.addProperty('shank', shankDevice);
+            end
+        end
+    end
+    
     headstages = importDeviceCollection(exp, params.device.headstage, 'headstage');
     
     assert(length(probes) == length(headstages));
@@ -71,7 +94,7 @@ function importDevices(exp, params, xml)
         headstages(i).addProperty('recording-system', dev);
     end
     
-    params.device.tracking.manufacturer = 'Pastalkova'; %TODO
+    params.device.tracking.manufacturer = 'JFRC'; %TODO
     trackXPix = importDevice(exp, params.device.tracking, 'Tracking xPix');
     trackYPix = importDevice(exp, params.device.tracking, 'Tracking yPix');
     camera = importDevice(exp, params.device.camera, 'camera');
