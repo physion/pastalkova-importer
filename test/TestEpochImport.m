@@ -171,8 +171,10 @@ classdef TestEpochImport < TestMatlabSuite
                 length(epochs));
             
             for i = 1:length(epochs)
+                epochs(i).getTagSet().contains(KeywordTag.keywordTagWithTag('correct'));
                 taggedCorrect = epochs(i).getTagSet().contains(KeywordTag.keywordTagWithTag('correct'));
-                assert(taggedCorrect == data.Laps.corrChoice(i), [num2str(i) ': ' num2str(taggedCorrect) ' ' num2str(data.Laps.corrChoice(i))]);
+                
+                assert(taggedCorrect == data.Laps.corrChoice(i));
             end
         end
         
