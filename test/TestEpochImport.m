@@ -94,5 +94,45 @@ classdef TestEpochImport < TestMatlabSuite
             
             assertEqual('Hz', char(r.getSamplingUnits()));
         end
+        
+        function testShouldAddTrackXResponse(self)
+            [epoch, data, ~] = self.importSingleEpoch();
+            
+            r = epoch.getResponse('Tracking xPix');
+            
+            assert(~isempty(r));
+            
+            assertElementsAlmostEqual(r.getFloatingPointData(),...
+                data.Track.xPix);
+            
+            assertEqual(char(r.getUnits()),...
+                'pixel');
+            
+            rates = r.getSamplingRates();
+            assertEqual(data.xml.lfpSampleRate,...
+                rates(1));
+            
+            assertEqual('Hz', char(r.getSamplingUnits()));
+        end
+        
+        function testShouldAddTrackYResponse(self)
+            [epoch, data, ~] = self.importSingleEpoch();
+            
+            r = epoch.getResponse('Tracking yPix');
+            
+            assert(~isempty(r));
+            
+            assertElementsAlmostEqual(r.getFloatingPointData(),...
+                data.Track.yPix);
+            
+            assertEqual(char(r.getUnits()),...
+                'pixel');
+            
+            rates = r.getSamplingRates();
+            assertEqual(data.xml.lfpSampleRate,...
+                rates(1));
+            
+            assertEqual('Hz', char(r.getSamplingUnits()));
+        end
     end
 end

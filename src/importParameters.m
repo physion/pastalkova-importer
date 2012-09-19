@@ -70,6 +70,14 @@ function importDevices(exp, params, xml)
     for i = 1:length(headstages)
         headstages(i).addProperty('recording-system', dev);
     end
+    
+    params.device.tracking.manufacturer = 'Pastalkova'; %TODO
+    trackXPix = importDevice(exp, params.device.tracking, 'Tracking xPix');
+    trackYPix = importDevice(exp, params.device.tracking, 'Tracking yPix');
+    camera = importDevice(exp, params.device.camera, 'camera');
+    
+    trackXPix.addProperty('camera', camera);
+    trackYPix.addProperty('camera', camera);
 end
 
 function devices = importDeviceCollection(exp, deviceParams, prefix)
