@@ -16,6 +16,18 @@ classdef TestEpochImport < TestMatlabSuite
              self.behavPath = 'fixtures/A543-20120422-01_BehavElectrData.mat';
         end 
         
+        function [epoch,data,params,desc] = importSingleEpoch(self)
+            data = load(self.behavPath);
+            params = load(self.paramsPath);
+            d = splitEpochs(data.Laps);
+            
+            [~,grp] = importParameters(self.dsc, params, data.xml);
+            
+            ind = 2;
+            epoch = importEpoch(grp, params, data, d(ind));
+            desc = d(ind);
+        end
+        
         function testShouldImportOneEpochPerLapID(self)
            
             data = load(self.behavPath);
@@ -47,17 +59,6 @@ classdef TestEpochImport < TestMatlabSuite
                     char(epoch.getProtocolID()));
         end
         
-        function [epoch,data,params,desc] = importSingleEpoch(self)
-            data = load(self.behavPath);
-            params = load(self.paramsPath);
-            d = splitEpochs(data.Laps);
-            
-            [~,grp] = importParameters(self.dsc, params, data.xml);
-            
-            ind = 2;
-            epoch = importEpoch(grp, params, data, d(ind));
-            desc = d(ind);
-        end
         
         function testShouldImportProtocolParametersFromProtocol(self)
             
@@ -191,6 +192,45 @@ classdef TestEpochImport < TestMatlabSuite
             
             for i = 1:length(epochs)
                 assert(data.Laps.whlDirChoice(i) == epochs(i).getProtocolParameter('wheelDirectionChoice'));
+            end
+        end
+        
+        function testShouldHaveExpectedDerivedResposnes(self)
+            [epoch, ~, ~, ~] = self.importSingleEpoch();
+            drNames = epoch.getDerivedResponseNames();
+            
+            expectedNames = { 'WhlDistCW',...
+                'WhlLapsDistCW',...
+                'WhlSpeedCW',...
+                'WhlDistCCW',...
+                'WhlLapsDistCCW',...
+                'WhlSpeedCCW',...
+                'xMM',...
+                'yMM',...
+                'mazeSect',...
+                'speed_MMsec',...
+                'accel_MMsecSq',...
+                'headDirDeg',...
+                'realDistMM',...
+                'linXMM',...
+                'linYMM',...
+                'linXPix',...
+                'linYPix',...
+                'linDistMM',...
+                'thetaPhHilb',...
+                'thetaPhLinInterp'};
+            
+            for i = 1:length(expectedNames)
+                expectedName = expectedNames{i};
+                
+                found = false;
+                for j = 1:length(drNames)
+                    if(drNames(j).equals([expectedName '_' date()])) %TODO: add date?
+                        found = true;
+                        break;
+                    end
+                end
+                assert(found, expectedName);
             end
         end
     end
