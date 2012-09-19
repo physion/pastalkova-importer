@@ -122,7 +122,7 @@ classdef TestEpochImport < TestMatlabSuite
                 data.Track.xPix(desc.lfpStartIndex:desc.lfpEndIndex));
             
             assertEqual(char(r.getUnits()),...
-                'pixel');
+                'pixels');
             
             rates = r.getSamplingRates();
             assertEqual(data.xml.lfpSampleRate,...
@@ -142,7 +142,7 @@ classdef TestEpochImport < TestMatlabSuite
                 data.Track.yPix(desc.lfpStartIndex:desc.lfpEndIndex));
             
             assertEqual(char(r.getUnits()),...
-                'pixel');
+                'pixels');
             
             rates = r.getSamplingRates();
             assertEqual(data.xml.lfpSampleRate,...

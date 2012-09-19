@@ -9,7 +9,7 @@ classdef TestOvationStructureImport < TestMatlabSuite
     
     methods
        
-        function self = TestShouldImportOvationStructure(name)
+        function self = TestOvationStructureImport(name)
              self = self@TestMatlabSuite(name);
              
              self.paramsPath = 'fixtures/A543-20120422-01-param.mat';
@@ -20,7 +20,8 @@ classdef TestOvationStructureImport < TestMatlabSuite
         function testShouldImportOvationProject(self)
             
             params = load(self.paramsPath);
-            xml.FileName = 'foo';
+            data = load(self.behavPath);
+            xml = data.xml;
             
             [proj,~] = importParameters(self.dsc, params, xml);
             
@@ -34,10 +35,12 @@ classdef TestOvationStructureImport < TestMatlabSuite
             
             [~,grp] = importParameters(self.dsc, params, xml);
             
-            for i = 1:xml.nChannels
-                dev = grp.getExperiment().getExternalDevice(['channel' num2str(i)], 'Neuronexus');
-                assert(~isempty(dev));
-                assert(~isempty(dev.getOwnerProperty('shank').getOwnerProperty('probe')));
+            for i = 1:length(xml.AnatGrps)
+                for c = xml.AnatGrps(i).Channels
+                    dev = grp.getExperiment().getExternalDevice(['channel' num2str(c)], 'Neuronexus');
+                    assert(~isempty(dev));
+                    assert(~isempty(dev.getOwnerProperty('shank').getOwnerProperty('probe')));
+                end
             end
         end
         
@@ -67,7 +70,8 @@ classdef TestOvationStructureImport < TestMatlabSuite
         
         function testShouldImportOvaitonEpochGroup(self)
             params = load(self.paramsPath);
-            xml.FileName = 'foo';
+            data = load(self.behavPath);
+            xml = data.xml;;
             
             [proj,grp] = importParameters(self.dsc, params, xml);
             
@@ -93,7 +97,8 @@ classdef TestOvationStructureImport < TestMatlabSuite
         function testShouldImportRootOvationSource(self)
             
             params = load(self.paramsPath);
-            xml.FileName = 'foo';
+            data = load(self.behavPath);
+            xml = data.xml;
             importParameters(self.dsc, params, xml);
             
             ctx = self.dsc.getContext();
@@ -126,7 +131,8 @@ classdef TestOvationStructureImport < TestMatlabSuite
         
         function testShouldImportSourceHierarchy(self)
             params = load(self.paramsPath);
-            xml.FileName = 'foo';
+            data = load(self.behavPath);
+            xml = data.xml;
             
             importParameters(self.dsc, params, xml);
             
