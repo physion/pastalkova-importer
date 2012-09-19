@@ -64,6 +64,9 @@ function importDevices(exp, params, xml)
     
     dev = importDevice(exp, params.device.RecSyst, 'Recording System');
     
+    cable = importDevice(exp, params.device.cable, 'Recording System Cable');
+    dev.addProperty('cable', cable);
+    
     for i = 1:length(headstages)
         headstages(i).addProperty('recording-system', dev);
     end

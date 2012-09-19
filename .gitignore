@@ -10,7 +10,7 @@
 
 # Matlab
 *.m~
-
+*.mat
 
 # Objy
 *.connection

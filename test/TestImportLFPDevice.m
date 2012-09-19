@@ -115,7 +115,7 @@ classdef TestImportLFPDevice < TestMatlabSuite
         end
         
         
-        function testShouldImportCableToRecordingSystem(self)
+        function testShouldImportCableDevice(self)
             params = load(self.paramsPath);
             data = load(self.behavPath);
             xml = data.xml;
@@ -124,8 +124,8 @@ classdef TestImportLFPDevice < TestMatlabSuite
             
             exp = grp.getExperiment();
             
-            dev = exp.externalDevice('Recording System',...
-                params.device.RecSyst.manufacturer);
+            dev = exp.externalDevice('Recording System Cable',...
+                params.device.cable.manufacturer);
             
             props = ovation.map2struct(dev.getOwnerProperties());
             
@@ -133,13 +133,31 @@ classdef TestImportLFPDevice < TestMatlabSuite
             expected = ovation.map2struct(...
                 ovation.struct2map(params.device.cable));
             
-            fnames = fieldnames(params.device.RecSyst);
+            fnames = fieldnames(params.device.cable);
             for j = 1:length(fnames)
                 fname = fnames{j};
                 
-                assertEqual(props.(['cable_' fname]),...
+                assertEqual(props.(fname),...
                     expected.(fname));
             end
+        end
+        
+        function testShouldLinkRecordingSystemToCable(self)
+            params = load(self.paramsPath);
+            data = load(self.behavPath);
+            xml = data.xml;
+            
+            [~,grp] = importParameters(self.dsc, params, xml);
+            
+            exp = grp.getExperiment();
+            
+            dev = exp.externalDevice('Recording System Cable',...
+                params.device.cable.manufacturer);
+            
+            recDev = exp.externalDevice('Recording System',...
+                params.device.RecSyst.manufacturer);
+            
+            assertTrue(~isempty(recDev.getOwnerProperty('cable')));
         end
         
         function testShouldLinkHeadstageToRecordingSystem(self)
