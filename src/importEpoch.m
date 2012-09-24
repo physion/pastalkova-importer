@@ -328,6 +328,7 @@ function epoch = importDerivedResponses(epoch, params, data, epochDescriptor)
         derivationParameters.(['spike_group_' num2str(i)]).clu = data.Clu;
     end
     
+	% TODO please confirm that .res and .res20kHz are the lfp and raw sample indexes of each spike
     spikeLfpIndex = data.Spike.res(spikeIdx) - epochDescriptor.lfpStartIndex;
     epoch.insertDerivedResponse('spike-index-lfp',...
         NumericData(spikeLfpIndex),...
