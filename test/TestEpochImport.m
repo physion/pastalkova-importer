@@ -250,7 +250,7 @@ classdef TestEpochImport < TestMatlabSuite
         function testShouldImportSpikeLfpTimeSeconds(self)
             [epoch, data, ~, ~] = self.importSingleEpoch();
             
-            lfpIndex = epoch.getMyDerivedResponse('spike-lfp-index').getFloatingPointData();
+            lfpIndex = epoch.getMyDerivedResponse('spike-index-lfp').getFloatingPointData();
             lfpTime = epoch.getMyDerivedResponse('spike-lfp-time-seconds').getFloatingPointData();
             
             
@@ -271,19 +271,26 @@ classdef TestEpochImport < TestMatlabSuite
         function testShouldIndexLfpSpikesFromEpochStart(self)
             [epoch, data, ~, desc] = self.importSingleEpoch();
             
-            expected = data.Spike.res - desc.lfpStartIndex;
+            % Find spikes in this Epoch
+            spikeIdx = desc.lfpStartIndex <= data.Spike.res & data.Spike.res <= desc.lfpEndIndex;
+    
+            expected = data.Spike.res(spikeIdx) - desc.lfpStartIndex;
             
-            assertElementsAlmostEqual(epoch.getMyDerivedResponse('spike-lfp-index').getFloatingPointData(),...
+            assertElementsAlmostEqual(epoch.getMyDerivedResponse('spike-index-lfp').getFloatingPointData(),...
                 expected);
         end
         
         function testShouldIndexRawSpikesFromEpochStart(self)
             [epoch, data, ~, desc] = self.importSingleEpoch();
             
+            % Find spikes in this Epoch
+            spikeIdx = desc.lfpStartIndex <= data.Spike.res & data.Spike.res <= desc.lfpEndIndex;
+    
             % lfpIndex * rawSamples/sec * sec/lfpSamples = rawSamples
             rawStartIndex = floor(desc.lfpStartIndex * data.xml.SampleRate / data.xml.lfpSampleRate);
             
-            expected = data.Spike.res20kHz - rawStartIndex;
+            % Raw spike indexes in this Epoch, 0-offet at Epoch start
+            expected = data.Spike.res20kHz(spikeIdx) - rawStartIndex;
             
             assertElementsAlmostEqual(epoch.getMyDerivedResponse('spike-index-20kHz').getFloatingPointData(),...
                 expected);
