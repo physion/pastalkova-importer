@@ -246,5 +246,47 @@ classdef TestEpochImport < TestMatlabSuite
                 assert(found, expectedName);
             end
         end
+        
+        function testShouldImportSpikeLfpTimeSeconds(self)
+            [epoch, data, ~, ~] = self.importSingleEpoch();
+            
+            lfpIndex = epoch.getMyDerivedResponse('spike-lfp-index').getFloatingPointData();
+            lfpTime = epoch.getMyDerivedResponse('spike-lfp-time-seconds').getFloatingPointData();
+            
+            
+            assertElementsAlmostEqual(lfpTime, lfpIndex / data.xml.lfpSampleRate);
+        end
+        
+        
+        function testShouldImportSpikeRawTimeSeconds(self)
+            [epoch, data, ~, ~] = self.importSingleEpoch();
+            
+            rawIndex = epoch.getMyDerivedResponse('spike-index-20kHz').getFloatingPointData();
+            rawTime = epoch.getMyDerivedResponse('spike-time-seconds').getFloatingPointData();
+            
+            
+            assertElementsAlmostEqual(rawTime, rawIndex / data.xml.SampleRate);
+        end
+        
+        function testShouldIndexLfpSpikesFromEpochStart(self)
+            [epoch, data, ~, desc] = self.importSingleEpoch();
+            
+            expected = data.Spike.res - desc.lfpStartIndex;
+            
+            assertElementsAlmostEqual(epoch.getMyDerivedResponse('spike-lfp-index').getFloatingPointData(),...
+                expected);
+        end
+        
+        function testShouldIndexRawSpikesFromEpochStart(self)
+            [epoch, data, ~, desc] = self.importSingleEpoch();
+            
+            % lfpIndex * rawSamples/sec * sec/lfpSamples = rawSamples
+            rawStartIndex = floor(desc.lfpStartIndex * data.xml.SampleRate / data.xml.lfpSampleRate);
+            
+            expected = data.Spike.res20kHz - rawStartIndex;
+            
+            assertElementsAlmostEqual(epoch.getMyDerivedResponse('spike-index-20kHz').getFloatingPointData(),...
+                expected);
+        end
     end
 end
