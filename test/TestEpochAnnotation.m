@@ -1,6 +1,6 @@
 % Copyright (c) 2012 Physion Consulting LLC
 
-classdef TestEpochAnnotation < TestMatlabSuite
+classdef TestEpochAnnotation < MatlabTestCase
     
     properties
         paramsPath;
@@ -10,7 +10,7 @@ classdef TestEpochAnnotation < TestMatlabSuite
     methods
         
         function self = TestEpochAnnotation(name)
-            self = self@TestMatlabSuite(name);
+            self = self@MatlabTestCase(name);
             
             self.paramsPath = 'fixtures/A543-20120422-01-param.mat';
             self.behavPath = 'fixtures/A543-20120422-01_BehavElectrData.mat';

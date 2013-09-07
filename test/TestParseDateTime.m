@@ -1,6 +1,6 @@
 % Copyright (c) 2012 Physion Consulting LLC
 
-classdef TestParseDateTime < TestMatlabSuite
+classdef TestParseDateTime < MatlabTestCase
     
     properties
     end
@@ -8,7 +8,7 @@ classdef TestParseDateTime < TestMatlabSuite
     methods
         
         function self = TestParseDateTime(name)
-             self = self@TestMatlabSuite(name);
+             self = self@MatlabTestCase(name);
         end 
         
         function testShouldParseFixtureExperimentDate(~)

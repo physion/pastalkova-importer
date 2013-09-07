@@ -1,6 +1,6 @@
 % Copyright (c) 2012 Physion Consulting LLC
 
-classdef TestImportTrackingDevice < TestMatlabSuite
+classdef TestImportTrackingDevice < MatlabTestCase
     
     properties
         paramsPath;
@@ -10,7 +10,7 @@ classdef TestImportTrackingDevice < TestMatlabSuite
     methods
         
         function self = TestImportTrackingDevice(name)
-             self = self@TestMatlabSuite(name);
+             self = self@MatlabTestCase(name);
              
              self.paramsPath = 'fixtures/A543-20120422-01-param.mat';
              self.behavPath = 'fixtures/A543-20120422-01_BehavElectrData.mat';

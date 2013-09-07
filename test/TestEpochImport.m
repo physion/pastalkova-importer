@@ -1,6 +1,6 @@
 % Copyright (c) 2012 Physion Consulting LLC
 
-classdef TestEpochImport < TestMatlabSuite
+classdef TestEpochImport < MatlabTestCase
     
     properties
         paramsPath;
@@ -10,7 +10,7 @@ classdef TestEpochImport < TestMatlabSuite
     methods
         
         function self = TestEpochImport(name)
-             self = self@TestMatlabSuite(name);
+             self = self@MatlabTestCase(name);
              
              self.paramsPath = 'fixtures/A543-20120422-01-param.mat';
              self.behavPath = 'fixtures/A543-20120422-01_BehavElectrData.mat';

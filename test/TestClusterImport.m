@@ -1,7 +1,7 @@
 % Copyright (c) 2012 Physion Consulting LLC
 
 
-classdef TestClusterImport < TestMatlabSuite
+classdef TestClusterImport < MatlabTestCase
     
     properties
         paramsPath;
@@ -11,7 +11,7 @@ classdef TestClusterImport < TestMatlabSuite
     methods
         
         function self = TestClusterImport(name)
-             self = self@TestMatlabSuite(name);
+             self = self@MatlabTestCase(name);
              
              self.paramsPath = 'fixtures/A543-20120422-01-param.mat';
              self.behavPath = 'fixtures/A543-20120422-01_BehavElectrData.mat';

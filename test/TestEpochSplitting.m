@@ -1,6 +1,6 @@
 % Copyright (c) 2012 Physion Consulting LLC
 
-classdef TestEpochSplitting < TestMatlabSuite
+classdef TestEpochSplitting < MatlabTestCase
     
     properties
         dataPath;
@@ -9,7 +9,7 @@ classdef TestEpochSplitting < TestMatlabSuite
     methods
         
         function self = TestEpochSplitting(name)
-             self = self@TestMatlabSuite(name);
+             self = self@MatlabTestCase(name);
              self.dataPath = 'fixtures/A543-20120422-01_BehavElectrData.mat';
         end 
         

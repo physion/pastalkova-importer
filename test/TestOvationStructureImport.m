@@ -1,6 +1,6 @@
 % Copyright (c) 2012 Physion Consulting LLC
 
-classdef TestOvationStructureImport < TestMatlabSuite
+classdef TestOvationStructureImport < MatlabTestCase
    
     properties
         paramsPath;
@@ -10,7 +10,7 @@ classdef TestOvationStructureImport < TestMatlabSuite
     methods
        
         function self = TestOvationStructureImport(name)
-             self = self@TestMatlabSuite(name);
+             self = self@MatlabTestCase(name);
              
              self.paramsPath = 'fixtures/A543-20120422-01-param.mat';
              self.behavPath = 'fixtures/A543-20120422-01_BehavElectrData.mat';
