@@ -1,13 +1,12 @@
-function [exp, epochs] = ImportExperiment(dsc, parameters, data)
+function [exp, epochs] = ImportExperiment(ctx, project, parameters, data)
    % Import Pastalkova Lab Experiment
    %
    %
    %   experiment = ImportExperiment(dataStoreCoordinator, parameters, behavioralData)
    %
-   %     dataStoreCoordinator: authenticated DataStoreCoordinator for the
-   %     database. Use the DataContext getAuthenticatedDataStoreCoordinator() 
-   %     method to retrieve the authenticated DataStoreCoordinator from an
-   %     authenticated DataContext.
+   %     context: us.physion.ovation.DataContext
+   %
+   %     project : us.physion.ovation.domain.Project
    %
    %     parameters: parameters structure via load()-ing a parameters .MAT
    %     file
@@ -18,7 +17,7 @@ function [exp, epochs] = ImportExperiment(dsc, parameters, data)
    % Copyright (c) 2012 Physion Consulting LLC
     
     disp('Importing Ovation structure...');
-    [~, group] = importParameters(dsc, parameters, data.xml);
+    [~, group] = importParameters(ctx, project, parameters, data.xml);
     
     disp('Importing Epochs...');
     epochs = importEpochs(group, parameters, data);

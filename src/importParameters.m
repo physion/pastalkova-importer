@@ -1,32 +1,27 @@
-function [project, group] = importParameters(dsc, parameters, xml)
+function [project, group] = importParameters(ctx, project, parameters, xml)
     import ovation.*;
     
-    ctx = dsc.getContext();
-    
-    project = importProject(ctx, parameters);
-    
-    source = importSource(ctx, parameters); % 'brain' source
+    sourceMap = importSource(ctx, parameters); % 'brain' source
     
     exp = importExperiment(project, parameters, xml);
     
-    group = importGroup(source, exp, parameters);
+    group = importGroup(exp, parameters);
     
 end
 
-function group = importGroup(source, exp, parameters)
+function group = importGroup(exp, epochGroupProtocol, parameters)
    
-    group = exp.insertEpochGroup(source,...
-        parameters.epochGroup.description,...
-        exp.getStartTime());
+    protocolParameters.restrictionLengthHrs = parameters.epochGroup.restrictionLengthHrs;
+    protocolParameters.animalWeight = parameters.epochGroup.animWeight;
+    protocolParameters.blockID = parameters.epochGroup.blockID;
     
-    group.addProperty('restrictionLengthHrs',...
-        parameters.epochGroup.restrictionLengthHrs);
-    group.addProperty('animalWeight',... %TODO units?
-        parameters.epochGroup.animWeight);
-    group.addProperty('blockID',...
-        parameters.epochGroup.blockID);
+    group = exp.insertEpochGroup(parameters.epochGroup.description,...
+        exp.getStartTime(),...
+        epochGroupProtocol,...
+        protocolParameters,...
+        []);
     
-    group.addNote(parameters.epochGroup.notes, 'experiment-notes');
+    group.addNote(group.getStart(), parameters.epochGroup.notes);
 end
 
 function exp = importExperiment(project, parameters, xml)
@@ -35,19 +30,22 @@ function exp = importExperiment(project, parameters, xml)
     startDate = parseDateTime(parameters.experiment.startDate,...
         parameters.experiment.timezone);
     
-    existing = project.getExperiments(startDate);
-    if(~isempty(existing))
-        warning('pastalkova:ovation:import',...
-            ['An experiment already exists for ' char(startDate)]);
+    itr = project.getExperiments().iterator();
+    while(itr.hasNext())
+        existingExperiment = itr.next();
+        if(existingExperiment.getStart().equals(startDate))
+            warning('pastalkova:ovation:import',...
+                ['An experiment already exists for ' char(startDate)]);
+        end
     end
     
     exp = project.insertExperiment(purpose, startDate);
     
+    % TODO equipment setup replaces external devices
     exp.addProperty('nChTotal', parameters.experiment.nChTotal);
     exp.addProperty('nProbes', parameters.experiment.nProbes);
     exp.addProperty('nHeadstages', parameters.experiment.nHeadstages);
     exp.addProperty('originalFile', xml.FileName);
-    
     importDevices(exp, parameters, xml);
 end
 
@@ -149,42 +147,16 @@ function dev = importDevice(exp, devParam, name, prefix)
     end
 end
 
-function project = importProject(ctx, parameters)
-    projects = ctx.getProjects(parameters.project.name);
-    
-    if(length(projects) > 1)
-        disp(['Multiple project with name ' projectName ':']);
-        for i=1:length(projects)
-            disp([num2str(i) '. ' char(projects(i).getStartTime().toString())]);
-        end
-        
-        targetProject = -1;
-        while (targetProject < 1 || targetProject > length(projects))
-            targetProject = input('Import data into project: ');
-        end
-        
-        project = projects(targetProject);
-    elseif(length(projects) == 1)
-        project = projects(1);
-    else
-        
-        startDate = parseDateTime(parameters.experiment.startDate,...
-            parameters.experiment.timezone);
-        
-        project = ctx.insertProject(parameters.project.name,...
-            parameters.experiment.purpose,...
-            startDate);
-    end
-end
 
 function brain = importSource(ctx, parameters)
     import ovation.*;
-    [src,isNew] = sourceForInsertion(ctx,...
-        {parameters.source.ID},...
-        {'ID'},...
-        {parameters.source.ID});
     
-    if(isNew)
+    src = asarray(ctx.getSources(parameters.source.ID,...
+        parameters.source.ID));
+    
+    if(isempty(src))
+        src = ctx.insertSource(parameters.source.ID,...
+            parameters.sourceID);
         src.addProperty('specie',...
             parameters.source.specie);
         src.addProperty('strain',...
@@ -194,6 +166,7 @@ function brain = importSource(ctx, parameters)
         src.addProperty('lightCycle',...
             parameters.source.lightCyc);
         
+        %TODO brain protocol
         brain = src.insertSource('brain');
     else
         brains = src.getChildren('brain');
@@ -202,6 +175,8 @@ function brain = importSource(ctx, parameters)
     end
     
     
+    %TODO brainAreaLayer protocol
+    %TODO return map {area : source}
     for i = 1:length(parameters.epochGroup.brainAreaLayer)
         label = parameters.epochGroup.brainAreaLayer{i};
         brain.insertSource(label);

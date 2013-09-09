@@ -21,7 +21,7 @@ classdef TestEpochImport < MatlabTestCase
             params = load(self.paramsPath);
             d = splitEpochs(data.Laps);
             
-            [~,grp] = importParameters(self.dsc, params, data.xml);
+            [~,grp] = importParameters(self.context, params, data.xml);
             
             ind = 2;
             epoch = importEpoch(grp, params, data, d(ind));
@@ -33,7 +33,7 @@ classdef TestEpochImport < MatlabTestCase
             data = load(self.behavPath);
             params = load(self.paramsPath);
             
-            [~,grp] = importParameters(self.dsc, params, data.xml);
+            [~,grp] = importParameters(self.context, params, data.xml);
             
             epochs = importEpochs(grp, params, data);
             
@@ -51,7 +51,7 @@ classdef TestEpochImport < MatlabTestCase
             params = load(self.paramsPath);
             d = splitEpochs(data.Laps);
             
-            [~,grp] = importParameters(self.dsc, params, data.xml);
+            [~,grp] = importParameters(self.context, params, data.xml);
             
             epoch = importEpoch(grp, params, data, d(2));
             
@@ -81,13 +81,15 @@ classdef TestEpochImport < MatlabTestCase
         function testShouldAddLFPResponse(self)
             [epoch, data, ~, desc] = self.importSingleEpoch();
             
-            r = epoch.getResponse('Recording System');
+            r = epoch.getMeasurement('Recording System'); %TODO name?
             
             assert(~isempty(r));
             
             startIndex = floor(desc.lfpStartIndex * data.xml.SampleRate / data.xml.lfpSampleRate);
             endIndex = floor(desc.lfpEndIndex * data.xml.SampleRate / data.xml.lfpSampleRate);
-            assertElementsAlmostEqual(r.getFloatingPointData(),...
+            
+            actual = nm2data(r);
+            assertElementsAlmostEqual(actual,...
                 data.Track.eegRaw(startIndex:endIndex));
             
             assertEqual(char(r.getUnits()),...
@@ -101,24 +103,35 @@ classdef TestEpochImport < MatlabTestCase
         end
         
         function testShouldAddDownsampledLFPDerivedResponse(self)
+            import ovation.*;
+            
             [epoch, data, ~, desc] = self.importSingleEpoch();
             
-            r = epoch.getMyDerivedResponse('eeg');
+            analysisRecords = asarray(epoch.getAnalysisRecords(epoch.getOwner()));
             
-            assert(~isempty(r));
-            
-            assertElementsAlmostEqual(r.getFloatingPointData(),...
-                data.Track.eeg(desc.lfpStartIndex:desc.lfpEndIndex));
+            for i = 1:length(analysisRecords)
+                if(analysisRecords(i).getName().equals('eeg'))
+                    
+                    assert(~isempty(r));
+                    
+                    d = nm2data(analysisRecords.getOutput('eeg'));
+                    assertElementsAlmostEqual(d,...
+                        data.Track.eeg(desc.lfpStartIndex:desc.lfpEndIndex));
+                end
+            end
         end
         
         function testShouldAddTrackXResponse(self)
+            import ovation.*;
+            
             [epoch, data, ~, desc] = self.importSingleEpoch();
             
-            r = epoch.getResponse('Tracking xPix');
+            r = epoch.getMeasurement('Tracking xPix');
             
             assert(~isempty(r));
             
-            assertElementsAlmostEqual(r.getFloatingPointData(),...
+            d = nm2data(r);
+            assertElementsAlmostEqual(d,...
                 data.Track.xPix(desc.lfpStartIndex:desc.lfpEndIndex));
             
             assertEqual(char(r.getUnits()),...
@@ -134,11 +147,11 @@ classdef TestEpochImport < MatlabTestCase
         function testShouldAddTrackYResponse(self)
             [epoch, data, ~, desc] = self.importSingleEpoch();
             
-            r = epoch.getResponse('Tracking yPix');
+            r = epoch.getMeasurement('Tracking yPix');
             
             assert(~isempty(r));
             
-            assertElementsAlmostEqual(r.getFloatingPointData(),...
+            assertElementsAlmostEqual(nm2data(r),...
                 data.Track.yPix(desc.lfpStartIndex:desc.lfpEndIndex));
             
             assertEqual(char(r.getUnits()),...
@@ -154,11 +167,11 @@ classdef TestEpochImport < MatlabTestCase
         function testShouldAddDirectionChoiceResponse(self)
             [epoch, data, ~, desc] = self.importSingleEpoch();
             
-            r = epoch.getResponse('Direction Choice');
+            r = epoch.getMeasurement('Direction Choice');
             
             assert(~isempty(r));
             
-            assertElementsAlmostEqual(r.getFloatingPointData(),...
+            assertElementsAlmostEqual(nm2data(r),...
                 data.Laps.dirChoice(desc.trialNumber));
             
             assertEqual(char(r.getUnits()),...
@@ -209,8 +222,16 @@ classdef TestEpochImport < MatlabTestCase
         end
         
         function testShouldHaveExpectedDerivedResposnes(self)
+            import ovation.*;
+            
             [epoch, ~, ~, ~] = self.importSingleEpoch();
-            drNames = epoch.getDerivedResponseNames();
+            
+            
+            arNames = java.util.HashSet();
+            analysisRecords = epoch.getAnalysisRecords(epoch.getOwner());
+            for i = 1:length(analysisRecords)
+                arNames.add(analysisRecords(i).getName());
+            end
             
             expectedNames = { 'WhlDistCW',...
                 'WhlLapsDistCW',...
@@ -235,23 +256,29 @@ classdef TestEpochImport < MatlabTestCase
             
             for i = 1:length(expectedNames)
                 expectedName = expectedNames{i};
-                
-                found = false;
-                for j = 1:length(drNames)
-                    if(drNames(j).equals([expectedName])) %TODO: add date?
-                        found = true;
-                        break;
-                    end
-                end
-                assert(found, expectedName);
+                assertTrue(arNames.contains(expectedName));
             end
         end
         
+        function ar = namedRecords(~, analysisRecords)
+            ar = java.util.HashMap();
+            itr = analysisRecords.iterator();
+            while(itr.hasNext())
+                r = itr.next();
+                ar.put(r.getName(), r);
+            end
+        end
+            
+        
         function testShouldImportSpikeLfpTimeSeconds(self)
+            import ovation.*;
+            
             [epoch, data, ~, ~] = self.importSingleEpoch();
             
-            lfpIndex = epoch.getMyDerivedResponse('spike-index-lfp').getFloatingPointData();
-            lfpTime = epoch.getMyDerivedResponse('spike-lfp-time-seconds').getFloatingPointData();
+            records = self.namedRecords(epoch.getAnalysisRecords(epoch.getOwner()));
+            
+            lfpIndex = nm2data(records.get('spike-index-lfp'));
+            lfpTime = nm2data(records.get('spike-lfp-time-seconds'));
             
             
             assertElementsAlmostEqual(lfpTime, lfpIndex / data.xml.lfpSampleRate);
@@ -259,16 +286,21 @@ classdef TestEpochImport < MatlabTestCase
         
         
         function testShouldImportSpikeRawTimeSeconds(self)
+            import ovation.*;
+            
             [epoch, data, ~, ~] = self.importSingleEpoch();
             
-            rawIndex = epoch.getMyDerivedResponse('spike-index-20kHz').getFloatingPointData();
-            rawTime = epoch.getMyDerivedResponse('spike-time-seconds').getFloatingPointData();
+            records = self.namedRecords(epoch.getAnalysisRecords(epoch.getOwner()));
+            rawIndex = nm2data(records.get('spike-index-20kHz'));
+            rawTime = nm2data(records.get('spike-time-seconds'));
             
             
             assertElementsAlmostEqual(rawTime, rawIndex / data.xml.SampleRate);
         end
         
         function testShouldIndexLfpSpikesFromEpochStart(self)
+            import ovation.*;
+            
             [epoch, data, ~, desc] = self.importSingleEpoch();
             
             % Find spikes in this Epoch
@@ -276,11 +308,15 @@ classdef TestEpochImport < MatlabTestCase
     
             expected = data.Spike.res(spikeIdx) - desc.lfpStartIndex;
             
-            assertElementsAlmostEqual(epoch.getMyDerivedResponse('spike-index-lfp').getFloatingPointData(),...
+            records = self.namedRecords(epoch.getAnalysisRecords(epoch.getOwner()));
+            
+            assertElementsAlmostEqual(nm2data(records.get('spike-index-lfp')),...
                 expected);
         end
         
         function testShouldIndexRawSpikesFromEpochStart(self)
+            import ovation.*;
+            
             [epoch, data, ~, desc] = self.importSingleEpoch();
             
             % Find spikes in this Epoch
@@ -292,7 +328,9 @@ classdef TestEpochImport < MatlabTestCase
             % Raw spike indexes in this Epoch, 0-offet at Epoch start
             expected = data.Spike.res20kHz(spikeIdx) - rawStartIndex;
             
-            assertElementsAlmostEqual(epoch.getMyDerivedResponse('spike-index-20kHz').getFloatingPointData(),...
+            records = self.namedRecords(epoch.getAnalysisRecords(epoch.getOwner()));
+            
+            assertElementsAlmostEqual(nm2data(records.get('spike-index-20kHz')),...
                 expected);
         end
     end

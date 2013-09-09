@@ -1,20 +1,20 @@
 % Copyright (c) 2012 Physion Consulting LLC
 
 classdef TestOvationStructureImport < MatlabTestCase
-   
+    
     properties
         paramsPath;
         behavPath;
     end
     
     methods
-       
+        
         function self = TestOvationStructureImport(name)
-             self = self@MatlabTestCase(name);
-             
-             self.paramsPath = 'fixtures/A543-20120422-01-param.mat';
-             self.behavPath = 'fixtures/A543-20120422-01_BehavElectrData.mat';
-        end 
+            self = self@MatlabTestCase(name);
+            
+            self.paramsPath = 'fixtures/A543-20120422-01-param.mat';
+            self.behavPath = 'fixtures/A543-20120422-01_BehavElectrData.mat';
+        end
         
         
         function testShouldImportOvationProject(self)
@@ -23,33 +23,18 @@ classdef TestOvationStructureImport < MatlabTestCase
             data = load(self.behavPath);
             xml = data.xml;
             
-            [proj,~] = importParameters(self.dsc, params, xml);
+            [proj,~] = importParameters(self.context, params, xml);
             
             assertEqual(char(proj.getName()), params.project.name);
         end
         
-        function testShouldImportChannelDevices(self)
-            params = load(self.paramsPath);
-            behav = load(self.behavPath);
-            xml = behav.xml;
-            
-            [~,grp] = importParameters(self.dsc, params, xml);
-            
-            for i = 1:length(xml.AnatGrps)
-                for c = xml.AnatGrps(i).Channels
-                    dev = grp.getExperiment().getExternalDevice(['channel' num2str(c)], 'Neuronexus');
-                    assert(~isempty(dev));
-                    assert(~isempty(dev.getOwnerProperty('shank').getOwnerProperty('probe')));
-                end
-            end
-        end
         
         function testShouldImportOvationExperiment(self)
             params = load(self.paramsPath);
             behav = load(self.behavPath);
             xml = behav.xml;
             
-            [~,grp] = importParameters(self.dsc, params, xml);
+            [~,grp] = importParameters(self.context, params, xml);
             
             assertJavaEqual(parseDateTime(params.experiment.startDate, params.experiment.timezone),...
                 grp.getExperiment().getStartTime());
@@ -57,11 +42,11 @@ classdef TestOvationStructureImport < MatlabTestCase
                 char(params.experiment.purpose{1}));
             
             exp = grp.getExperiment();
-            assertEqual(exp.getOwnerProperty('nChTotal'),...
+            assertEqual(exp.getProperty(exp.getOwner(), 'nChTotal'),...
                 params.experiment.nChTotal);
-            assertEqual(exp.getOwnerProperty('nProbes'),...
+            assertEqual(exp.getProperty(exp.getOwner(), 'nProbes'),...
                 params.experiment.nProbes);
-            assertEqual(exp.getOwnerProperty('nHeadstages'),...
+            assertEqual(exp.getProperty(exp.getOwner(), 'nHeadstages'),...
                 params.experiment.nHeadstages);
             
             assertEqual(exp.getOwnerProperty('originalFile'),...
@@ -71,9 +56,9 @@ classdef TestOvationStructureImport < MatlabTestCase
         function testShouldImportOvaitonEpochGroup(self)
             params = load(self.paramsPath);
             data = load(self.behavPath);
-            xml = data.xml;;
+            xml = data.xml;
             
-            [proj,grp] = importParameters(self.dsc, params, xml);
+            [proj,grp] = importParameters(self.context, params, xml);
             
             projs = grp.getExperiment().getProjects();
             assertJavaEqual(projs(1), proj);
@@ -81,11 +66,11 @@ classdef TestOvationStructureImport < MatlabTestCase
             assertJavaEqual(grp.getLabel(),...
                 params.epochGroup.description);
             
-            assertEqual(grp.getOwnerProperty('restrictionLengthHrs'),...
+            assertEqual(grp.getProtocolParameter('restrictionLengthHrs'),...
                 params.epochGroup.restrictionLengthHrs);
-            assertEqual(grp.getOwnerProperty('animalWeight'), ...
+            assertEqual(grp.getProtocolParameter('animalWeight'), ...
                 params.epochGroup.animWeight); %TODO units?
-            assertEqual(grp.getOwnerProperty('blockID'),...
+            assertEqual(grp.getProtocolParameter('blockID'),...
                 params.epochGroup.blockID);
             
             notes = grp.getNoteAnnotations('experiment-notes');
@@ -95,62 +80,72 @@ classdef TestOvationStructureImport < MatlabTestCase
         end
         
         function testShouldImportRootOvationSource(self)
+            import ovation.*;
             
             params = load(self.paramsPath);
             data = load(self.behavPath);
             xml = data.xml;
-            importParameters(self.dsc, params, xml);
+            importParameters(self.context, params, xml);
             
-            ctx = self.dsc.getContext();
+            ctx = self.context;
             
-            sources = ctx.getSources(params.source.ID);
+            sources = asarray(ctx.getSources(params.source.ID, params.source.ID));
             assertEqual(1, length(sources));
             
             src = sources(1);
             
-            assertJavaEqual(...
-                src.getLabel(),...
-                params.source.ID);
             
-            assertEqual(src.getOwnerProperty('specie'),...
+            assertEqual(src.getProperty(src.getOwner(), 'specie'),...
                 params.source.specie);
             assertEqual(...
-                src.getOwnerProperty('strain'),...
+                src.getProperty(src.getOwner(), 'strain'),...
                 params.source.strain);
             assertEqual(...
-                src.getOwnerProperty('sex'),...
+                src.getProperty(src.getOwner(), 'sex'),...
                 params.source.sex);
             assertEqual(...
-                src.getOwnerProperty('lightCycle'),...
+                src.getProperty(src.getOwner(), 'lightCycle'),...
                 params.source.lightCyc);
-            assertEqual(...
-                src.getOwnerProperty('ID'),...
-                params.source.ID);
-            
         end
         
         function testShouldImportSourceHierarchy(self)
+            import ovation.*;
+            
             params = load(self.paramsPath);
             data = load(self.behavPath);
             xml = data.xml;
             
-            importParameters(self.dsc, params, xml);
+            ctx = self.context;
             
-            ctx = self.dsc.getContext();
+            importParameters(ctx, params, xml);
             
-            sources = ctx.getSources('brain');
+            sources = asarray(ctx.getSourcesWithLabel('brain'));
             assertEqual(1, length(sources));
             brainSource = sources(1);
             
-            assertJavaEqual(...
-                brainSource.getParent().getLabel(),...
-                params.source.ID);
+            parents = asarray(brainSource.getParentSources());
+            found = false;
+            for i = 1:length(parents)
+                if(parents(i).getLabel().equals(params.source.ID))
+                    found = true;
+                    break;
+                end
+            end
+            assertTrue(found);
             
             for i = 1:length(params.epochGroup.brainAreaLayer)
                 label = params.epochGroup.brainAreaLayer{i};
                 expectedCount = sum(ismember(params.epochGroup.brainAreaLayer, label));
                 
-                assertEqual(expectedCount, length(brainSource.getChildren(label)));
+                actual = 0;
+                children = asarray(brainSource.getChildrenSources());
+                for j = 1:length(children)
+                    if(children(j).getLabel().equals(label))
+                        actual = actual + 1;
+                    end
+                end
+                
+                assertEqual(expectedCount, actual);
             end
         end
     end

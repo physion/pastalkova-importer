@@ -22,7 +22,7 @@ classdef TestSpikeImport < MatlabTestCase
             params = load(self.paramsPath);
             d = splitEpochs(data.Laps);
             
-            [~,grp] = importParameters(self.dsc, params, data.xml);
+            [~,grp] = importParameters(self.context, params, data.xml);
             
             ind = 2;
             epoch = importEpoch(grp, params, data, d(ind));
