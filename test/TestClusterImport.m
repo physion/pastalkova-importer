@@ -30,7 +30,10 @@ classdef TestClusterImport < MatlabTestCase
         end
         
         function testShouldSaveClusterDerivedResponses(self)
-           
+            import ovation.*;
+            [epoch, data, ~, desc] = self.importSingleEpoch();
+            
+            assertTrue(false, 'TODO');
         end
         
     end
