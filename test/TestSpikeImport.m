@@ -11,11 +11,11 @@ classdef TestSpikeImport < MatlabTestCase
     methods
         
         function self = TestSpikeImport(name)
-             self = self@MatlabTestCase(name);
-             
-             self.paramsPath = 'fixtures/A543-20120422-01-param.mat';
-             self.behavPath = 'fixtures/A543-20120422-01_BehavElectrData.mat';
-        end 
+            self = self@MatlabTestCase(name);
+            
+            self.paramsPath = 'fixtures/A543-20120422-01-param.mat';
+            self.behavPath = 'fixtures/A543-20120422-01_BehavElectrData.mat';
+        end
         
         function [epoch,data,params,desc] = importSingleEpoch(self)
             data = load(self.behavPath);
@@ -29,8 +29,12 @@ classdef TestSpikeImport < MatlabTestCase
             desc = d(ind);
         end
         
+        function d = analysisRecordData(~, arMap, name)
+            d = nm2data(arMap.get(name).getOutputs().get(name));
+        end
+    
         function testShouldSaveSpikeTimeDerivedResponses(self)
-           
+            import ovation.*;
             [epoch, data, ~, desc] = self.importSingleEpoch();
             
             expectedSpikesLFP = data.Spike.res(desc.lfpStartIndex <= data.Spike.res & ...
@@ -38,11 +42,13 @@ classdef TestSpikeImport < MatlabTestCase
             
             expectedSpikeCount = numel(expectedSpikesLFP);
             
-            r = epoch.getMyDerivedResponse('spike-index-lfp');
-            assertEqual(expectedSpikeCount, length(r.getFloatingPointData()));
+            ar = namedMap(epoch.getAnalysisRecords(epoch.getOwner()));
             
-            r = epoch.getMyDerivedResponse('spike-index-20kHz');
-            assertEqual(expectedSpikeCount, length(r.getFloatingPointData()));
+            r = self.analysisRecordData(ar, 'spike-index-lfp');
+            assertEqual(expectedSpikeCount, numel(r));
+            
+            r = self.analysisRecordData(ar, 'spike-index-20kHz');
+            assertEqual(expectedSpikeCount, numel(r));
         end
         
         function testShouldSaveSpikeRelatedDerivedResponses(self)
@@ -53,24 +59,25 @@ classdef TestSpikeImport < MatlabTestCase
             
             expectedSpikeCount = numel(expectedSpikesLFP);
             
-            r = epoch.getMyDerivedResponse('spike-clu');
-            assertEqual(expectedSpikeCount, length(r.getFloatingPointData()));
+            ar = namedMap(epoch.getAnalysisRecords(epoch.getOwner()));
             
-            r = epoch.getMyDerivedResponse('spike-shank');
-            assertEqual(expectedSpikeCount, length(r.getFloatingPointData()));
+            r = self.analysisRecordData(ar, 'spike-clu');
+            assertEqual(expectedSpikeCount, numel(r));
             
-            r = epoch.getMyDerivedResponse('spike-totClu');
-            assertEqual(expectedSpikeCount, length(r.getFloatingPointData()));
+            r = self.analysisRecordData(ar, 'spike-shank');
+            assertEqual(expectedSpikeCount, numel(r));
             
-            r = epoch.getMyDerivedResponse('spike-IDBurst');
-            assertEqual(expectedSpikeCount, length(r.getFloatingPointData()));
+            r = self.analysisRecordData(ar, 'spike-totClu');
+            assertEqual(expectedSpikeCount, numel(r));
             
-            r = epoch.getMyDerivedResponse('spike-burstLength');
-            assertEqual(expectedSpikeCount, length(r.getFloatingPointData()));
+            r = self.analysisRecordData(ar, 'spike-IDBurst');
+            assertEqual(expectedSpikeCount, numel(r));
             
-            r = epoch.getMyDerivedResponse('spike-orderInBurst');
-            assertEqual(expectedSpikeCount, length(r.getFloatingPointData()));
+            r = self.analysisRecordData(ar, 'spike-burstLength');
+            assertEqual(expectedSpikeCount, numel(r));
             
+            r = self.analysisRecordData(ar, 'spike-orderInBurst');
+            assertEqual(expectedSpikeCount, numel(r));
             
         end
         
@@ -84,11 +91,13 @@ classdef TestSpikeImport < MatlabTestCase
             
             assert(false, 'Don''t know how thPhase transform truncates indexes');
             
-            r = epoch.getMyDerivedResponse('spike-thPhaseHilb');
-            assertEqual(expectedSpikeCount, length(r.getFloatingPointData()));
+            ar = namedMap(epoch.getAnalysisRecords(epoch.getOwner()));
             
-            r = epoch.getMyDerivedResponse('spike-thPhaseInterp');
-            assertEqual(expectedSpikeCount, length(r.getFloatingPointData()));
+            r = self.analysisRecordData(ar, 'spike-thPhaseHilb');
+            assertEqual(expectedSpikeCount, numel(r));
+            
+            r = self.analysisRecordData(ar, 'spike-thPhaseInterp');
+            assertEqual(expectedSpikeCount, numel(r));
         end
     end
 end
