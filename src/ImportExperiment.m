@@ -1,23 +1,45 @@
-function [exp, epochs] = ImportExperiment(ctx, project, parameters, data)
-   % Import Pastalkova Lab Experiment
-   %
-   %
-   %   experiment = ImportExperiment(dataStoreCoordinator, parameters, behavioralData)
-   %
-   %     context: us.physion.ovation.DataContext
-   %
-   %     project : us.physion.ovation.domain.Project
-   %
-   %     parameters: parameters structure via load()-ing a parameters .MAT
-   %     file
-   %
-   %     behavioralData: structure via load()-ing a BehavElectrData.mat
-   %     file
-   
-   % Copyright (c) 2012 Physion Consulting LLC
+% Import Pastalkova Lab Experiment
+%
+%
+%   experiment = ImportExperiment(dataStoreCoordinator, parameters, behavioralData)
+%
+%     context: us.physion.ovation.DataContext
+%
+%     project : us.physion.ovation.domain.Project
+%
+%     parameters: parameters structure via load()-ing a parameters .MAT
+%     file
+%
+%     behavioralData: structure via load()-ing a BehavElectrData.mat
+%     file
+% 
+%     sourceProtocol: Protocol URI for source (brain, brain area) derivation
+%      
+%     sourceProtocolParameters: Protocol parameters for Source derivation
+%      
+%     sourceDerivationDeviceParameters: Device parameters for Source derivation
+     
+
+% Copyright (c) 2012 Physion Consulting LLC
+
+function [exp, epochs] = ImportExperiment(ctx,...
+        project,...
+        parameters,...
+        data,...
+        srcProtocol,...
+        srcProtocolParameters,...
+        srcDeviceParameters)
+    
+    error(nargchk(7, 7, nargin));  %#ok<NCHKN>
     
     disp('Importing Ovation structure...');
-    [~, group] = importParameters(ctx, project, parameters, data.xml);
+    [~, group] = importParameters(ctx,...
+        project,...
+        parameters,...
+        data.xml,...
+        srcProtocol,...
+        srcProtocolParameters,...
+        srcDeviceParameters);
     
     disp('Importing Epochs...');
     epochs = importEpochs(group, parameters, data);

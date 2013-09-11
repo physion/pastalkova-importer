@@ -23,7 +23,11 @@ classdef TestOvationStructureImport < MatlabTestCase
             data = load(self.behavPath);
             xml = data.xml;
             
-            [proj,~] = importParameters(self.context, params, xml);
+            project = self.context.insertProject('TestEpochImport',...
+                'TestEpochImport',...
+                datetime());
+            
+            [proj,~] = importParameters(self.context, project, params, xml);
             
             assertEqual(char(proj.getName()), params.project.name);
         end

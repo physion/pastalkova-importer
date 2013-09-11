@@ -17,11 +17,17 @@ classdef TestEpochAnnotation < MatlabTestCase
         end
         
         function [epoch,data,params,desc] = importSingleEpoch(self)
+            import ovation.*;
+            
             data = load(self.behavPath);
             params = load(self.paramsPath);
             d = splitEpochs(data.Laps);
             
-            [~,grp] = importParameters(self.context, params, data.xml);
+            project = self.context.insertProject('TestEpochImport',...
+                'TestEpochImport',...
+                datetime());
+            
+            [~,grp] = importParameters(self.context, project, params, data.xml);
             
             ind = 4;
             epoch = importEpoch(grp, params, data, d(ind));
@@ -110,13 +116,12 @@ classdef TestEpochAnnotation < MatlabTestCase
             assertTrue(analysisRecords.containsKey('thetaTtoPZerosAmplitude'));
         end
         
-        function testShoulAddSpwDerivedResponses(self)
+        function testShoulAddSpwAnalysisRecords(self)
             import ovation.*;
             
             [epoch, ~, ~, ~] = self.importSingleEpoch();
             
             analysisRecords = namedMap(epoch.getAnalysisRecords(epoch.getOwner()));
-            
             assertTrue(analysisRecords.containsKey('spw_peak'));
             assertTrue(analysisRecords.containsKey('spw_start'));
             assertTrue(analysisRecords.containsKey('spw_end'));
