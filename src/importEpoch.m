@@ -4,7 +4,9 @@ function epoch = importEpoch(group, params, data, epochDescriptor)
     protocolParams = params.epochGroup.protocol;
     protocolParams.wheelDirectionChoice = data.Laps.whlDirChoice(epochDescriptor.trialNumber);
     
-    % Sources from unique names of params.device.probe.targetBrainArea
+    % TODO Sources from unique names of params.device.probe.targetBrainArea
+    
+    
     epoch = group.insertEpoch(inputSources,...
         group.getStart().plusSeconds(epochDescriptor.startTimeSeconds),...
         group.getStart().plusSeconds(epochDescriptor.endTimeSeconds),...
