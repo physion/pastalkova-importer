@@ -1,49 +1,39 @@
-pastalkova-importer
-===================
+# Pastalkova Lab Ovation Import Tool
 
-Ovation importer for Pastalkova Lab data
+The `pastalkova-importer` package provides Matlab&reg code to import Pastalkova Lab behavior data sets.
 
-Testing
-=======
+## Requirements
 
-Setup
------
+- [Ovation](http://ovation.io) 2.0 or later
+- [Ovation Matlab API][http:/ovation.io/downloads] installed and the `+ovation` package on the Matlab path
 
-Add the ovation-test-manager-1.4.jar to the Java classpath:
 
-	>> javaaddpath lib/ovation-test-manager-1.4.jar
+## Installation
 
-Add the +ovation/+test package to the Matlab path:
+1. Download the importer source by [downloading](https://github.com/physion/ovation-matlab/archive/master.zip) the source archive or cloning the GitHub repository.
+2. Add the `src/` folder to your Matlab path
 
-	>> addpath path/to/+ovation
 
-Add the +xunit pacakge to the Matlab path
+## Testing
 
-	>> addpath lib/matlab-xunit-doctest/xunit
+Unit tests for the importer are written using the Matlab [`xunit`] test framework.
 
-Add the src folder to the Matlab path
+### Setup
 
-	>> addpath src
+ [Download](http://www.mathworks.com/matlabcentral/fileexchange/22846-matlab-xunit-test-framework) and install the `+xunit` package by adding it to your Matlab path. 
+
+### Running tests
 	
+From within the `pastalkova-lab/` folder:
 
-Running tests
--------------
-
-Set the necessary environment variables:
-
-	OVATION_CONNECTION_FILE = path to test database connection file
-	OVATION_TEST_FDID = test database ID
-	OVATION_LOCK_SERVER = lock server host (i.e. $(hostname))
-
-Run the Matlab tests:
-
+    >> addpath src
 	>> runtests test
 
 
-License
-=======
 
-Copyright (c) 2012, Physion Consulting, LLC.
+## License
+
+Copyright (c) 2012-2013, Physion, LLC.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -52,3 +42,6 @@ Redistribution and use in source and binary forms, with or without modification,
 - Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+Matlab is a registered trademark of The Mathworks, Inc.
