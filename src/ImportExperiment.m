@@ -1,7 +1,16 @@
 % Import Pastalkova Lab Experiment
 %
+%   Imports an entire Experiment from a single parameters/behavioralData 
+%   .mat pair.
 %
-%   experiment = ImportExperiment(dataStoreCoordinator, parameters, behavioralData)
+%   [exp, epochs] = ImportExperiment(context,...
+%         project,...
+%         parameters,...
+%         data,...
+%         protocol,...
+%         srcProtocol,...
+%         srcProtocolParameters,...
+%         srcDeviceParameters)
 %
 %     context: us.physion.ovation.DataContext
 %
@@ -13,7 +22,11 @@
 %     behavioralData: structure via load()-ing a BehavElectrData.mat
 %     file
 % 
-%     sourceProtocol: Protocol URI for source (brain, brain area) derivation
+%     protocol: us.physion.ovation.domain.Protocol
+%         Epoch protocol for behavioralData
+% 
+%     sourceProtocol: us.physion.ovation.domain.Protocol
+%         Protocol for source (brain, brain area) derivation
 %      
 %     sourceProtocolParameters: Protocol parameters for Source derivation
 %      

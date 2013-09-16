@@ -1,3 +1,34 @@
+% Import Pastalkova Lab Behavioral Epochs
+%
+%   Imports a collection of Epochs from a parameters/BehavElctrData .mat
+%   pair into an existing EpochGroup.
+%
+%   epochs = ImportEpochs(group,...
+%         parameters,...
+%         behavioralData,...
+%         inputSources,...
+%         protocol,...
+%         analysisProtocol)
+%
+%     groups: us.physion.ovation.domain.EpochGroup
+%
+%     parameters: parameters structure via loading a parameters .MAT file
+%
+%     behavioralData: structure via load()-ing a BehavElectrData.mat file
+% 
+%     importSources: java.lang.HashMap
+%         Map of Epoch input Sources
+% 
+%     protocol: us.physion.ovation.domain.Protocol
+%         Epoch protocol for behavioralData
+% 
+%     analsysiProtocol: us.physion.ovation.domain.Protocol
+%         Protocol for automated analysis of Epoch data
+     
+
+% Copyright (c) 2012 Physion Consulting LLC
+
+
 function epochs = ImportEpochs(group,...
         params,...
         data,...
