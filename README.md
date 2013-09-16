@@ -5,7 +5,7 @@ The `pastalkova-importer` package provides Matlab&reg code to import Pastalkova 
 ## Requirements
 
 - [Ovation](http://ovation.io) 2.0 or later
-- [Ovation Matlab API][http:/ovation.io/downloads] installed and the `+ovation` package on the Matlab path
+- [Ovation Matlab API][http://ovation.io/downloads] installed and the `+ovation` package on the Matlab path
 
 
 ## Installation
