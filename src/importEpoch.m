@@ -23,13 +23,15 @@ function epoch = importEpoch(group, protocol, params, data, epochDescriptor, inp
         deviceParameters);
     
     
-    
+    disp('    Importing responses...');
     importResponses(epoch, group, params, data, epochDescriptor);
     
+    disp('    Importing analysis records...');
     epoch.getDataContext().beginTransaction()
     importAnalysisRecords(epoch, params, data, epochDescriptor, analysisProtocol);
     epoch.getDataContext().commitTransaction();
     
+    disp('    Importing annotations...');
     importAnnotations(epoch, params, data, epochDescriptor);
     
     disp('    Waiting for uploads to complete...');
@@ -56,21 +58,20 @@ function epoch = importWheelRuns(epoch, tagSuffix, text, starts, stops, data)
     
     for i = 1:numel(starts)
         
-        startTime = epoch.getStartTime().plusMillis(1000 * starts(i) / data.xml.lfpSampleRate);
-        endTime = epoch.getStartTime().plusMillis(1000 * stops(i) / data.xml.lfpSampleRate);
+        startTime = epoch.getStart().plusMillis(1000 * starts(i) / data.xml.lfpSampleRate);
+        endTime = epoch.getStart().plusMillis(1000 * stops(i) / data.xml.lfpSampleRate);
+        
+        if(i == numel(starts))
+            prefix = ['last-wheel-run-' tagSuffix];
+        else
+            prefix = ['wheel-runs-' tagSuffix];
+        end
         
         annotation = epoch.addTimelineAnnotation(text,...
-            ['wheel-runs-' tagSuffix],...
+            [prefix '  lfpStartIndex: ' num2str(starts(i)) ' lfpEndIndex: ' num2str(stops(i))],...
             startTime,...
             endTime);
         
-        annotation.addTag(['wheel-run-' tagSuffix '-' num2str(i)]);
-        annotation.addProperty('lfpStartIndex', starts(i));
-        annotation.addProperty('lfpEndIndex', stops(i));
-        
-        if(i == numel(starts))
-            annotation.addTag(['last-wheel-run-' tagSuffix]);
-        end
     end
 end
 
@@ -254,8 +255,8 @@ function epoch = importAnalysisRecords(epoch, ~, data, epochDescriptor, analysis
     
     
     % Theta
-    startSeconds = (epoch.getStart().getMillis() - epoch.getEpochGroup().getStart().getMillis) / 1000;
-    endSeconds = (epoch.getEnd().getMillis() - epoch.getEpochGroup().getEnd().getMillis) / 1000;
+    startSeconds = (epoch.getStart().getMillis() - epoch.getParent().getStart().getMillis) / 1000;
+    endSeconds = (epoch.getEnd().getMillis() - epoch.getParent().getEnd().getMillis) / 1000;
     
     derivationParameters = struct(); % TODO parameters
     
@@ -465,31 +466,34 @@ function epoch = importAnalysisRecords(epoch, ~, data, epochDescriptor, analysis
         '1/spike'));
 end
 
-function insertThetaEvents(epoch, ~,... %parameters 
+function insertThetaEvents(epoch, ~,... %parameters
         events, startSeconds, endSeconds, text, annotationGroup, analysisRecord)
     
     import ovation.*;
     import us.physion.ovation.values.NumericData;
     
     eventRows = events(startSeconds <= events(:,1) & events(:,1) <= endSeconds, :);
-    for r = eventRows
-        eventTime = epoch.getEpochGroup().getStartTime().plusMillis(r(1) * 1000);
-        epoch.addTimelineAnnotation(text, annotationGroup, eventTime);
+    if(~isempty(eventRows))
+        for r = eventRows
+            eventTime = epoch.getParent().getStart().plusMillis(r(1) * 1000);
+            epoch.addTimelineAnnotation(text, annotationGroup, eventTime);
+        end
+        
+        
+        nd = NumericData().addData([annotationGroup ' Time'],...
+            eventRows(:,1),...
+            's',...
+            1,...
+            '1/event');
+        analysisRecord.addNumericOutput([annotationGroup ' Time'], nd);
+        
+        nd = NumericData().addData([annotationGroup 'Amplitude'],...
+            eventRows(:, 2),...
+            'unknown',... %TODO units
+            1,...
+            '1/event');
+        analysisRecord.addNumericOutput([annotationGroup 'Amplitude'], nd);
     end
-    
-    nd = NumericData().addData([annotationGroup ' Time'],...
-        eventRows(:,1),...
-        's',...
-        1,...
-        '1/event');
-    analysisRecord.addNumericOutput([annotationGroup ' Time'], nd);
-    
-    nd = NumericData().addData([annotationGroup 'Amplitude'],...
-        eventRows(:, 2),...
-        'unknown',... %TODO units
-        1,...
-        '1/event');
-    analysisRecord.addNumericOutput([annotationGroup 'Amplitude'], nd);
 end
 
 function insertSpwTimeEvents(epoch, data, epochDescriptor, ~, events, text, annotationGroup, analysisRecord)
@@ -500,7 +504,7 @@ function insertSpwTimeEvents(epoch, data, epochDescriptor, ~, events, text, anno
     eventMillis = zeros(1, length(epochEvents));
     for i = 1:length(epochEvents)
         eventMillis(i) = events(i) / data.xml.lfpSampleRate;
-        eventTime = epoch.getStartTime().plusMillis(eventMillis(i));
+        eventTime = epoch.getStart().plusMillis(eventMillis(i));
         epoch.addTimelineAnnotation(text, annotationGroup, eventTime);
         
     end

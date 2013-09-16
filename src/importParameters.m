@@ -12,14 +12,14 @@ function [project, group, sourceMap] = importParameters(ctx,...
     
     narginchk(8, 8);
     
-    disp('  importing Experiment...');
+    disp('  Importing Experiment...');
     exp = importExperiment(project, parameters, xml);
     
     
-    disp('  importing EpochGroup...');
+    disp('  Importing EpochGroup...');
     group = importGroup(exp, expProtocol, parameters); %TODO group protocol
     
-    disp('  importing Sources...');
+    disp('  Importing Sources...');
     sourceMap = importSource(ctx,...  % 'brain' source
         parameters,...
         group,...
@@ -153,15 +153,15 @@ function sourceMap = importSource(ctx,...
             parameters.source.ID);
     else
         children = asarray(src.getChildrenSources());
-        brains = [];
+        brains = {};
         for i = 1:length(children)
             if(children(i).getLabel().equals('brain'))
-                brains(end+1) = children(i); %#ok<AGROW>
+                brains{end+1} = children(i); %#ok<AGROW>
             end
         end
         
         assert(length(brains) == 1);
-        brain = brains(1);
+        brain = brains{1};
     end
     
     sourceMap = java.util.HashMap();
