@@ -112,8 +112,10 @@ function sourceMap = importSource(ctx,...
     
     src = asarray(ctx.getSources(parameters.source.ID,...
         parameters.source.ID));
-    assert(length(src) == 1);
-    src = src(1);
+    assert(length(src) <= 1);
+    if(length(src) == 1)
+        src = src(1);
+    end
     
     if(isempty(srcProtocolParameters))
         srcProtocolParameters = struct2map(struct());
