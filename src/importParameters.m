@@ -36,7 +36,8 @@ function group = importGroup(exp, epochGroupProtocol, parameters)
    
     protocolParameters.restrictionLengthHrs = parameters.epochGroup.restrictionLengthHrs;
     protocolParameters.animalWeight = parameters.epochGroup.animWeight;
-    protocolParameters.blockID = parameters.epochGroup.blockID;
+%     protocolParameters.blockID = parameters.epochGroup.blockID;
+% changed 12-6-2013
     
     group = exp.insertEpochGroup(parameters.epochGroup.description,...
         exp.getStart(),...
@@ -67,11 +68,21 @@ function exp = importExperiment(project, parameters, xml)
     
     equipment = parameters.device;
     
-    % Collect Probes under headstages
-    assert(length(equipment.headstage) == length(equipment.probe),...
-        'Expected parameters.device.headstange and parameters.device.probe to be equal length');
+%     % Collect Probes under headstages
+%     assert(length(equipment.headstage) == length(equipment.probe),...
+%         'Expected parameters.device.headstange and parameters.device.probe to be equal length');
+%     
+%     for i = 1:length(equipment.headstage)
+%         equipment.headstage(i).probe = equipment.probe(i);
+%     end
+
+ % Collect Probes under headstages
+ 
+ % MADE A CHANGE TO ELIMINATE NEED FOR EQUAL NUMBER HEADSTAGE/PROBES
+ % BRL 12-6-2013
     
-    for i = 1:length(equipment.headstage)
+    
+    for i = 1:length(equipment.probe)
         equipment.headstage(i).probe = equipment.probe(i);
     end
     
